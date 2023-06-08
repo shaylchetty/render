@@ -1,23 +1,17 @@
-from flask import Flask, render_template, request
-from flask_cors import CORS
+from flask import Flask, render_template, request, jsonify
 import random
 import json
 import sqlite3
 
 app = Flask(__name__)
-CORS(app)
 
 # Set up the SQLite database connection
-
-
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 # Create the database and players table if they don't exist
-
-
 def create_database():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -31,6 +25,15 @@ def create_database():
     conn.commit()
     conn.close()
 
+# Decorator function to enable CORS
+def enable_cors(func):
+    def wrapper(*args, **kwargs):
+        response = func(*args, **kwargs)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST')
+        return response
+    return wrapper
 
 @app.route('/')
 def home():
@@ -43,10 +46,9 @@ def home():
 
 
 @app.route('/update_score', methods=['POST'])
+@enable_cors
 def update_score():
-
     if request.method == 'POST':
-
         username = request.form.get('username')
         score = int(request.form.get('score'))
 
@@ -59,12 +61,10 @@ def update_score():
 
         if player is None:
             # Player does not exist, insert a new record
-
             cursor.execute(
                 'INSERT INTO players (username, score) VALUES (?, ?)', (username, score))
         else:
             # Player already exists, update the score
-
             cursor.execute(
                 'UPDATE players SET score = ? WHERE username = ?', (score, username))
 
@@ -75,6 +75,7 @@ def update_score():
 
 
 @app.route('/equatefunc')
+@enable_cors
 def equatefunc():
     a = random.randint(2, 100)  # Three random integers
     b = random.randint(2, 100)
@@ -101,9 +102,10 @@ def equatefunc():
 
     tup = [question, solve]
 
-    return json.dumps(tup)
+    return jsonify(tup)
 
 
 if __name__ == '__main__':
     create_database()
     app.run(debug=True)
+
