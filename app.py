@@ -27,13 +27,15 @@ def create_database():
 
 # Decorator function to enable CORS
 def enable_cors(func):
-    def wrapper(*args, **kwargs):
+    def decorator(*args, **kwargs):
         response = func(*args, **kwargs)
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST')
         return response
-    return wrapper
+    # Rename the decorator function
+    decorator.__name__ = f"cors_enabled_{func.__name__}"
+    return decorator
 
 @app.route('/')
 def home():
@@ -108,4 +110,3 @@ def equatefunc():
 if __name__ == '__main__':
     create_database()
     app.run(debug=True)
-
